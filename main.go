@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/milkpod29/orm-benchmark/benchs"
+	"github.com/yusaer/orm-benchmark/benchs"
 
 	_ "github.com/lib/pq"
 )
@@ -73,5 +73,4 @@ func main() {
 
 	fmt.Println("\nReports: \n")
 	fmt.Print(benchs.MakeReport())
-
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"database/sql"
+
 	_ "github.com/lib/pq"
 	"gopkg.in/gorp.v1"
 )
@@ -21,8 +22,8 @@ func init() {
 
 		db, err := sql.Open("postgres", ORM_SOURCE)
 		checkErr(err)
-		d := &gorp.DbMap{Db: db, Dialect: gorp.PostgresDialect{}}
-		dbmap = d
+		dbmap = &gorp.DbMap{Db: db, Dialect: gorp.PostgresDialect{}}
+		dbmap.AddTableWithName(Model{}, "models").SetKeys(true, "id")
 	}
 }
 
@@ -34,26 +35,95 @@ func GorpInsert(b *B) {
 	})
 	for i := 0; i < b.N; i++ {
 		m.Id = 0
-		d := dbmap.Insert(&m)
-		if d.Error != nil {
-			fmt.Println(d.Error())
+		err := dbmap.Insert(m)
+		if err != nil {
+			fmt.Println(err)
 			b.FailNow()
 		}
 	}
 }
 
 func GorpInsertMulti(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	var ms []interface{}
+	wrapExecute(b, func() {
+		initDB()
+		ms = make([]interface{}, 0, 100)
+		for i := 0; i < 100; i++ {
+			ms = append(ms, NewModel())
+		}
+	})
+
+	for i := 0; i < b.N; i++ {
+		tx, err := dbmap.Begin()
+		if err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+		if err := tx.Insert(ms...); err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+		tx.Commit()
+	}
 }
 
 func GorpUpdate(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	var m *Model
+	wrapExecute(b, func() {
+		initDB()
+		m = NewModel()
+	})
+	for i := 0; i < b.N; i++ {
+		m.Id = 0
+		_, err := dbmap.Update(m)
+		if err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	}
 }
 
 func GorpRead(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	var m *Model
+	wrapExecute(b, func() {
+		initDB()
+		m = NewModel()
+		err := dbmap.Insert(m)
+		if err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	})
+	for i := 0; i < b.N; i++ {
+		err := dbmap.SelectOne(m, "SELECT * FROM models WHERE id = $1", 1)
+		if err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	}
 }
 
 func GorpReadSlice(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	var m *Model
+	wrapExecute(b, func() {
+		initDB()
+		m = NewModel()
+		for i := 0; i < 100; i++ {
+			m.Id = 0
+			err := dbmap.Insert(m)
+			if err != nil {
+				fmt.Println(err)
+				b.FailNow()
+			}
+		}
+	})
+
+	for i := 0; i < b.N; i++ {
+		var models []*Model
+		_, err := dbmap.Select(&models, "SELECT * FROM models WHERE id > $1 LIMIT 100", 0)
+		if err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	}
 }

@@ -73,5 +73,4 @@ func main() {
 
 	fmt.Println("\nReports: \n")
 	fmt.Print(benchs.MakeReport())
-
 }

@@ -3,8 +3,8 @@ package benchs
 import (
 	"fmt"
 
-	_ "github.com/lib/pq"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 var sqlxdb *sqlx.DB
@@ -18,7 +18,7 @@ func init() {
 		st.AddBenchmark("Read", 4000*ORM_MULTI, SqlxRead)
 		st.AddBenchmark("MultiRead limit 100", 2000*ORM_MULTI, SqlxReadSlice)
 
-		db, err := sqlx.Connect("postgres", ORM_SOURCE);
+		db, err := sqlx.Connect("postgres", ORM_SOURCE)
 		checkErr(err)
 		sqlxdb = db
 	}
@@ -31,7 +31,7 @@ func SqlxInsert(b *B) {
 		m = NewModel()
 	})
 	for i := 0; i < b.N; i++ {
-		sqlxdb.MustExec(`INSERT INTO model (name, title, fax, web, age, "right", counter) VALUES ($1, $2, $3, $4, $5, $6, $7)`, m.Name, m.Title, m.Fax, m.Web, m.Age, m.Right, m.Counter)
+		sqlxdb.MustExec(`INSERT INTO models (name, title, fax, web, age, "right", counter) VALUES ($1, $2, $3, $4, $5, $6, $7)`, m.Name, m.Title, m.Fax, m.Web, m.Age, m.Right, m.Counter)
 	}
 }
 
@@ -48,11 +48,11 @@ func SqlxRead(b *B) {
 	wrapExecute(b, func() {
 		initDB()
 		m = NewModel()
-		sqlxdb.MustExec(`INSERT INTO model (name, title, fax, web, age, "right", counter) VALUES ($1, $2, $3, $4, $5, $6, $7)`, m.Name, m.Title, m.Fax, m.Web, m.Age, m.Right, m.Counter)
+		sqlxdb.MustExec(`INSERT INTO models (name, title, fax, web, age, "right", counter) VALUES ($1, $2, $3, $4, $5, $6, $7)`, m.Name, m.Title, m.Fax, m.Web, m.Age, m.Right, m.Counter)
 	})
 	for i := 0; i < b.N; i++ {
 		m := []Model{}
-		if err := sqlxdb.Select(&m, "SELECT * FROM model"); err != nil {
+		if err := sqlxdb.Select(&m, "SELECT * FROM models"); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}

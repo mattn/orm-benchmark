@@ -32,12 +32,13 @@ func DbrInsert(b *B) {
 
 	for i := 0; i < b.N; i++ {
 		m.Id = 0
-		if _, err := dbrsession.InsertInto("model").Columns("name", "title", "fax", "web", "age", "right", "counter").Record(m).Exec(); err != nil {
+		if _, err := dbrsession.InsertInto("models").Columns("name", "title", "fax", "web", "age", "right", "counter").Record(m).Exec(); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}
 	}
 }
+
 //
 func DbrInsertMulti(b *B) {
 	panic(fmt.Errorf("in preparation"))
@@ -52,14 +53,14 @@ func DbrRead(b *B) {
 	wrapExecute(b, func() {
 		initDB()
 		m = NewModel()
-		if _, err := dbrsession.InsertInto("model").Columns("name", "title", "fax", "web", "age", "right", "counter").Record(m).Exec(); err != nil {
+		if _, err := dbrsession.InsertInto("models").Columns("name", "title", "fax", "web", "age", "right", "counter").Record(m).Exec(); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}
 	})
 	for i := 0; i < b.N; i++ {
 		var m []Model
-		if _, err := dbrsession.Select("*").From("model").Load(&m); err != nil {
+		if _, err := dbrsession.Select("*").From("models").Load(&m); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}

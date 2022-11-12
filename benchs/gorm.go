@@ -3,7 +3,8 @@ package benchs
 import (
 	"fmt"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var gormdb *gorm.DB
@@ -17,7 +18,7 @@ func init() {
 		st.AddBenchmark("Read", 4000*ORM_MULTI, GormRead)
 		st.AddBenchmark("MultiRead limit 100", 2000*ORM_MULTI, GormReadSlice)
 
-		conn, err := gorm.Open("postgres", ORM_SOURCE)
+		conn, err := gorm.Open(postgres.Open(ORM_SOURCE), &gorm.Config{})
 		if err != nil {
 			fmt.Println(err)
 		}

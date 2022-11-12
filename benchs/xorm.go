@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"database/sql"
-	"xorm.io/xorm"
+	"github.com/go-xorm/xorm"
 )
 
 var xo *xorm.Session

@@ -3,8 +3,8 @@ package benchs
 import (
 	"fmt"
 
-	"github.com/astaxie/beego/orm"
 	"database/sql"
+	"github.com/astaxie/beego/orm"
 )
 
 var bo orm.Ormer

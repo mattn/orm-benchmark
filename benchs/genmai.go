@@ -1,6 +1,7 @@
 package benchs
 
 import (
+	"database/sql"
 	"fmt"
 
 	_ "github.com/lib/pq"
@@ -8,6 +9,60 @@ import (
 )
 
 var genmaidb *genmai.DB
+
+func initDB_genmai() {
+
+	sqls := []string{
+		`DROP TABLE IF EXISTS genmai_model;`,
+		`CREATE TABLE genmai_model (
+			id SERIAL NOT NULL,
+			name text NOT NULL,
+			title text NOT NULL,
+			fax text NOT NULL,
+			web text NOT NULL,
+			age integer NOT NULL,
+			"right" boolean NOT NULL,
+			counter bigint NOT NULL,
+			CONSTRAINT genmai_model_pkey PRIMARY KEY (id)
+			) WITH (OIDS=FALSE);`,
+	}
+
+	DB, err := sql.Open("postgres", ORM_SOURCE)
+	checkErr(err)
+	defer DB.Close()
+
+	err = DB.Ping()
+	checkErr(err)
+
+	for _, sql := range sqls {
+		_, err = DB.Exec(sql)
+		checkErr(err)
+	}
+}
+
+type GenmaiModel struct {
+	Id      int `db:"pk"`
+	Name    string
+	Title   string
+	Fax     string
+	Web     string
+	Age     int
+	Right   bool
+	Counter int64
+}
+
+func NewGenmaiModel() *GenmaiModel {
+	m := new(GenmaiModel)
+	m.Name = "Orm Benchmark"
+	m.Title = "Just a Benchmark for fun"
+	m.Fax = "99909990"
+	m.Web = "http://blog.milkpod29.me"
+	m.Age = 100
+	m.Right = true
+	m.Counter = 1000
+
+	return m
+}
 
 func init() {
 	st := NewSuite("genmai")
@@ -25,10 +80,10 @@ func init() {
 }
 
 func GenmaiInsert(b *B) {
-	var m *Model
+	var m *GenmaiModel
 	wrapExecute(b, func() {
-		initDB()
-		m = NewModel()
+		initDB_genmai()
+		m = NewGenmaiModel()
 	})
 
 	for i := 0; i < b.N; i++ {
@@ -41,26 +96,61 @@ func GenmaiInsert(b *B) {
 }
 
 func GenmaiInsertMulti(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	var ms []GenmaiModel
+	wrapExecute(b, func() {
+		initDB_genmai()
+		ms = make([]GenmaiModel, 0, 100)
+		for i := 0; i < 100; i++ {
+			m := NewGenmaiModel()
+			ms = append(ms, *m)
+		}
+	})
+
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 100; j++ {
+			ms[j].Id = i*100 + j
+		}
+		if _, err := genmaidb.Insert(ms); err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	}
 }
 
 func GenmaiUpdate(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	var m *GenmaiModel
+	wrapExecute(b, func() {
+		initDB_genmai()
+		m = NewGenmaiModel()
+		if _, err := genmaidb.Insert(m); err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		} else {
+			m.Id = 1
+		}
+	})
+	for i := 0; i < b.N; i++ {
+		_, err := genmaidb.Update(m)
+		if err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	}
 }
 
 func GenmaiRead(b *B) {
-	var m *Model
+	var m *GenmaiModel
 	wrapExecute(b, func() {
-		initDB()
-		m = NewModel()
+		initDB_genmai()
+		m = NewGenmaiModel()
 		if _, err := genmaidb.Insert(m); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}
 	})
 	for i := 0; i < b.N; i++ {
-		var results []Model
-		if err := genmaidb.Select(&results); err != nil {
+		var results []GenmaiModel
+		if err := genmaidb.Select(&results, genmaidb.Where("id", "=", 1)); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}
@@ -68,5 +158,23 @@ func GenmaiRead(b *B) {
 }
 
 func GenmaiReadSlice(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	var m *GenmaiModel
+	wrapExecute(b, func() {
+		initDB_genmai()
+		m = NewGenmaiModel()
+		for i := 0; i < 100; i++ {
+			m.Id = 0
+			if _, err := genmaidb.Insert(m); err != nil {
+				fmt.Println(err)
+				b.FailNow()
+			}
+		}
+	})
+	for i := 0; i < b.N; i++ {
+		var results []GenmaiModel
+		if err := genmaidb.Select(&results, genmaidb.Limit(100)); err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	}
 }

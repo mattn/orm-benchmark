@@ -54,7 +54,7 @@ func PgInsertMulti(b *B) {
 		for i := 0; i < 100; i++ {
 			ms = append(ms, NewModel())
 		}
-		if _, err := pgdb.Model(ms).Insert(); err != nil {
+		if _, err := pgdb.Model(&ms).Insert(); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}
@@ -73,7 +73,7 @@ func PgUpdate(b *B) {
 	})
 
 	for i := 0; i < b.N; i++ {
-		if _, err := pgdb.Model(m).Update(&m); err != nil {
+		if _, err := pgdb.Model(m).WherePK().Update(&m); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}
@@ -92,7 +92,7 @@ func PgRead(b *B) {
 	})
 
 	for i := 0; i < b.N; i++ {
-		if err := pgdb.Model(m).Select(&m); err != nil {
+		if err := pgdb.Model(m).Select(m); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}

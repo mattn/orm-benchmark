@@ -9,7 +9,7 @@ import (
 
 var xo *xorm.Session
 
-func initDB2() {
+func initDB_xorm() {
 
 	sqls := []string{
 		`DROP TABLE IF EXISTS xorm_model;`,
@@ -83,7 +83,7 @@ func init() {
 func XormInsert(b *B) {
 	var m *XormModel
 	wrapExecute(b, func() {
-		initDB2()
+		initDB_xorm()
 		m = NewXormModel()
 	})
 
@@ -99,7 +99,7 @@ func XormInsert(b *B) {
 func XormInsertMulti(b *B) {
 	var ms []*XormModel
 	wrapExecute(b, func() {
-		initDB2()
+		initDB_xorm()
 		ms = make([]*XormModel, 0, 100)
 		for i := 0; i < 100; i++ {
 			ms = append(ms, NewXormModel())
@@ -116,7 +116,7 @@ func XormInsertMulti(b *B) {
 func XormUpdate(b *B) {
 	var m *XormModel
 	wrapExecute(b, func() {
-		initDB2()
+		initDB_xorm()
 		m = NewXormModel()
 		if _, err := xo.Insert(m); err != nil {
 			fmt.Println(err)
@@ -135,7 +135,7 @@ func XormUpdate(b *B) {
 func XormRead(b *B) {
 	var m *XormModel
 	wrapExecute(b, func() {
-		initDB2()
+		initDB_xorm()
 		m = NewXormModel()
 		if _, err := xo.Insert(m); err != nil {
 			fmt.Println(err)
@@ -154,7 +154,7 @@ func XormRead(b *B) {
 func XormReadSlice(b *B) {
 	var m *XormModel
 	wrapExecute(b, func() {
-		initDB2()
+		initDB_xorm()
 		m = NewXormModel()
 		for i := 0; i < 100; i++ {
 			m.Id = 0

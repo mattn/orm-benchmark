@@ -41,11 +41,35 @@ func DbrInsert(b *B) {
 
 //
 func DbrInsertMulti(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	panic(fmt.Errorf("Not support multi insert"))
 }
 
 func DbrUpdate(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	var m *Model
+	wrapExecute(b, func() {
+		initDB()
+		m = NewModel()
+		if _, err := dbrsession.InsertInto("models").Columns("name", "title", "fax", "web", "age", "right", "counter").Record(m).Exec(); err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	})
+
+	for i := 0; i < b.N; i++ {
+		if _, err := dbrsession.Update("models").
+			Set("name", m.Name).
+			Set("title", m.Title).
+			Set("fax", m.Fax).
+			Set("web", m.Web).
+			Set("age", m.Age).
+			Set("right", m.Right).
+			Set("counter", m.Counter).
+			Where("id = ?", m.Id).
+			Exec(); err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	}
 }
 
 func DbrRead(b *B) {
@@ -68,5 +92,23 @@ func DbrRead(b *B) {
 }
 
 func DbrReadSlice(b *B) {
-	panic(fmt.Errorf("in preparation"))
+	var m *Model
+	wrapExecute(b, func() {
+		initDB()
+		m = NewModel()
+		for i := 0; i < 100; i++ {
+			if _, err := dbrsession.InsertInto("models").Columns("name", "title", "fax", "web", "age", "right", "counter").Record(m).Exec(); err != nil {
+				fmt.Println(err)
+				b.FailNow()
+			}
+		}
+	})
+
+	for i := 0; i < b.N; i++ {
+		var ms []Model
+		if _, err := dbrsession.Select("*").From("models").Limit(100).Load(&ms); err != nil {
+			fmt.Println(err)
+			b.FailNow()
+		}
+	}
 }

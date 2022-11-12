@@ -9,7 +9,7 @@ import (
 
 var bo orm.Ormer
 
-func initDB3() {
+func initDB_beego() {
 
 	sqls := []string{
 		`DROP TABLE IF EXISTS beego_model;`,
@@ -82,7 +82,7 @@ func init() {
 func BeegoOrmInsert(b *B) {
 	var m *BeegoModel
 	wrapExecute(b, func() {
-		initDB3()
+		initDB_beego()
 		m = NewBeegoModel()
 	})
 
@@ -98,7 +98,7 @@ func BeegoOrmInsert(b *B) {
 func BeegoOrmInsertMulti(b *B) {
 	var ms []*BeegoModel
 	wrapExecute(b, func() {
-		initDB3()
+		initDB_beego()
 		ms = make([]*BeegoModel, 0, 100)
 		for i := 0; i < 100; i++ {
 			ms = append(ms, NewBeegoModel())
@@ -116,7 +116,7 @@ func BeegoOrmInsertMulti(b *B) {
 func BeegoOrmUpdate(b *B) {
 	var m *BeegoModel
 	wrapExecute(b, func() {
-		initDB3()
+		initDB_beego()
 		m = NewBeegoModel()
 		if _, err := bo.Insert(m); err != nil {
 			fmt.Println(err)
@@ -135,7 +135,7 @@ func BeegoOrmUpdate(b *B) {
 func BeegoOrmRead(b *B) {
 	var m *BeegoModel
 	wrapExecute(b, func() {
-		initDB3()
+		initDB_beego()
 		m = NewBeegoModel()
 		if _, err := bo.Insert(m); err != nil {
 			fmt.Println(err)
@@ -154,7 +154,7 @@ func BeegoOrmRead(b *B) {
 func BeegoOrmReadSlice(b *B) {
 	var m *BeegoModel
 	wrapExecute(b, func() {
-		initDB3()
+		initDB_beego()
 		m = NewBeegoModel()
 		for i := 0; i < 100; i++ {
 			m.Id = 0

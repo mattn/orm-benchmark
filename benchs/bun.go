@@ -13,8 +13,15 @@ import (
 
 var bundb *bun.DB
 
+func initDB_bun() {
+	_, err := bundb.NewDropTable().Model((*BunModel)(nil)).IfExists().Exec(context.Background())
+	checkErr(err)
+	_, err = bundb.NewCreateTable().Model((*BunModel)(nil)).IfNotExists().Exec(context.Background())
+	checkErr(err)
+}
+
 type BunModel struct {
-	bun.BaseModel `bun:"table:model,alias:m"`
+	bun.BaseModel `bun:"table:bun_model,alias:m"`
 
 	Id int64 `bun:"id,pk,autoincrement"`
 
@@ -56,10 +63,10 @@ func init() {
 }
 
 func BunInsert(b *B) {
-	var m *Model
+	var m *BunModel
 	wrapExecute(b, func() {
-		initDB()
-		m = NewModel()
+		initDB_bun()
+		m = NewBunModel()
 	})
 	for i := 0; i < b.N; i++ {
 		m.Id = 0
@@ -72,17 +79,26 @@ func BunInsert(b *B) {
 }
 
 func BunInsertMulti(b *B) {
-	var ms []*BunModel
+	var ms []BunModel
 	wrapExecute(b, func() {
-		initDB3()
-		ms = make([]*BunModel, 0, 100)
+		initDB_bun()
+		ms = make([]BunModel, 0, 100)
 		for i := 0; i < 100; i++ {
-			ms = append(ms, NewBunModel())
+			m := NewBunModel()
+			ms = append(ms, *m)
 		}
 	})
 
 	for i := 0; i < b.N; i++ {
-		if _, err := bundb.NewInsert().Model(ms).Exec(context.Background()); err != nil {
+		/*
+			for i := range ms {
+				ms[i] = NewBunModel()
+			}
+		*/
+		for i := 0; i < 100; i++ {
+			ms[i].Id = 0
+		}
+		if _, err := bundb.NewInsert().Model(&ms).Exec(context.Background()); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}
@@ -92,7 +108,7 @@ func BunInsertMulti(b *B) {
 func BunUpdate(b *B) {
 	var m *BunModel
 	wrapExecute(b, func() {
-		initDB3()
+		initDB_bun()
 		m = NewBunModel()
 		if _, err := bundb.NewInsert().Model(m).Exec(context.Background()); err != nil {
 			fmt.Println(err)
@@ -101,7 +117,7 @@ func BunUpdate(b *B) {
 	})
 
 	for i := 0; i < b.N; i++ {
-		if _, err := bo.Update(m); err != nil {
+		if _, err := bundb.NewUpdate().Model(m).WherePK().Exec(context.Background()); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}
@@ -111,7 +127,7 @@ func BunUpdate(b *B) {
 func BunRead(b *B) {
 	var m *BunModel
 	wrapExecute(b, func() {
-		initDB3()
+		initDB_bun()
 		m = NewBunModel()
 		if _, err := bundb.NewInsert().Model(m).Exec(context.Background()); err != nil {
 			fmt.Println(err)
@@ -130,7 +146,7 @@ func BunRead(b *B) {
 func BunReadSlice(b *B) {
 	var m *BunModel
 	wrapExecute(b, func() {
-		initDB3()
+		initDB_bun()
 		m = NewBunModel()
 		for i := 0; i < 100; i++ {
 			m.Id = 0
@@ -142,8 +158,8 @@ func BunReadSlice(b *B) {
 	})
 
 	for i := 0; i < b.N; i++ {
-		var models []BunModel
-		if err := bundb.NewSelect().Model(models).Where("id > ?", 0).Limit(100).Scan(context.Background()); err != nil {
+		var models []*BunModel
+		if err := bundb.NewSelect().Model(&models).Where("id > ?", 0).Limit(100).Scan(context.Background()); err != nil {
 			fmt.Println(err)
 			b.FailNow()
 		}

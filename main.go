@@ -71,6 +71,6 @@ func main() {
 		benchs.RunBenchmark(n)
 	}
 
-	fmt.Println("\nReports: \n")
+	fmt.Print("\nReports: \n\n")
 	fmt.Print(benchs.MakeReport())
 }

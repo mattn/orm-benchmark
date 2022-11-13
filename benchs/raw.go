@@ -95,10 +95,14 @@ func RawInsertMulti(b *B) {
 		}
 	}
 
+	query := rawInsertBaseSQL + valuesSQL
+	nFields := 7
+	args := make([]interface{}, len(ms)*nFields)
+	stmt, err := raw.Prepare(query)
+	checkErr(err)
+	defer stmt.Close()
+
 	for i := 0; i < b.N; i++ {
-		nFields := 7
-		query := rawInsertBaseSQL + valuesSQL
-		args := make([]interface{}, len(ms)*nFields)
 		for j := range ms {
 			offset := j * nFields
 			args[offset+0] = ms[j].Name
@@ -110,7 +114,7 @@ func RawInsertMulti(b *B) {
 			args[offset+6] = ms[j].Counter
 		}
 		// pq dose not support the LastInsertId method.
-		_, err := raw.Exec(query, args...)
+		stmt.Exec(args...)
 		if err != nil {
 			fmt.Println(err)
 			b.FailNow()
@@ -162,7 +166,6 @@ func RawRead(b *B) {
 	for i := 0; i < b.N; i++ {
 		var mout Model
 		err := stmt.QueryRow(1).Scan(
-			//err := stmt.QueryRow(m.Id).Scan(
 			&mout.Id,
 			&mout.Name,
 			&mout.Title,

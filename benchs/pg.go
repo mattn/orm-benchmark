@@ -17,12 +17,9 @@ func init() {
 		st.AddBenchmark("Read", 4000*ORM_MULTI, PgRead)
 		st.AddBenchmark("MultiRead limit 100", 2000*ORM_MULTI, PgReadSlice)
 
-		pgdb = pg.Connect(&pg.Options{
-			Addr:     "oracle2:5432",
-			User:     "postgres",
-			Password: "postgres",
-			Database: "example",
-		})
+		options, err := pg.ParseURL(ORM_SOURCE)
+		checkErr(err)
+		pgdb = pg.Connect(options)
 	}
 }
 
